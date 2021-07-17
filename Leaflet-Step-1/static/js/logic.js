@@ -61,6 +61,28 @@ function setcolors(depth){
   return circleColor;
 }
 
+// Function Get Color
+function getColor(d) {
+  return d > 90 ?  '#00FF00' :
+         d > 70 ?  '#eb5e34' :
+         d > 50 ?  '#eb9f34' :
+         d > 30 ?  '#ebd334' :
+         d > 10 ?  '#e2eb34' :
+                   '#00FF00';
+}
+
+// Function Style
+function style(feature) {
+  return {
+    fillColor: getColor(feature.geometry.coordinates[2]),
+    weight: 2,
+    opacity: 1,
+    color: 'white',
+    dashArray: '3',
+    fillOpacity: 0.7
+  };
+}
+
 // Perform an API call to earthquake.usgs.gov
 d3.json(geojson_url).then(data => {
   L.geoJSON(data, { 
@@ -79,27 +101,23 @@ d3.json(geojson_url).then(data => {
       <br>Magnitude: ${feature.properties.mag}<br>Depth: ${feature.geometry.coordinates[2]}<br>${new Date(feature.properties.time)}</div>`);
     }
   }).addTo(myMap)
-    // Adding legend to the map
-    var legend = L.control({ position: "bottomright" });
-    legend.onAdd = function() {
-        var div = L.DomUtil.create("div", "info legend");
-        var limits = ["-10-10", "10-30", "30-50", "50-70", "70-90", "90+"];
-        var colors = ["#00FF00", "#e2eb34", "#ebd334", "#eb9f34", "#eb5e34", "#FF0000"];
-        var labels = [];
 
-        var legendInfo = "<h3>Depth of Earth</h3>" +
-          "<div class=\"labels\">" +
-            "<div class=\"min\">" + limits[0] + "</div>" +
-            "<div class=\"max\">" + limits[limits.length - 1] + "</div>" +
-          "</div>";
-
-        div.innerHTML = legendInfo;
+// Adding legend to the map
+var legend = L.control({ position: "bottomright" });
     
-        limits.forEach(function(limit, index) {
-        labels.push("<p><div class=\"color\" style=\"background-color: " + colors[index] + "\"> </div> <span>" + limit +  "</span> </p>");
-    });
-    div.innerHTML += labels.join(""); // joining all the tags into one single string 
-    return div;
+legend.onAdd = function(myMap) {
+    
+  var div = L.DomUtil.create("div", "info legend"),
+      limits = [-10, 10, 30, 50, 70, 90],
+      labels = [];
+
+  for (var i = 0; i < limits.length; i++) {
+      div.innerHTML +=
+          '<i style="background:' + getColor(limits[i] + 1) + '"></i> ' +
+          limits[i] + (limits[i + 1] ? '&ndash;' + limits[i + 1] + '<br>' : '+');
+  }
+      
+  return div;
 };
 legend.addTo(myMap);
 });
